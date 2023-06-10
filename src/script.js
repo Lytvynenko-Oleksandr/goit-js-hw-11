@@ -94,34 +94,37 @@ function createInfoItem(label, value) {
   return item;
 }
 
+// Обработчик события отправки формы
 document.querySelector('#search-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   const searchQuery = event.target.elements.searchQuery.value.trim();
 
-  if (searchQuery !== '') {
-    page = 1;
-    await fetchImages(searchQuery);
-    scrollToNextGalleryItem();
+  if (searchQuery === '') {
+    Notiflix.Notify.failure('Please enter a search query.');
+    return; // Прекратить выполнение функции, если поле ввода пустое
   }
+
+  page = 1; // Сброс значения страницы при новом поиске
+  await fetchImages(searchQuery);
+  window.scrollBy({
+    top: document.querySelector('.gallery').firstElementChild.getBoundingClientRect().height * 2,
+    behavior: 'smooth',
+  });
 });
 
+// Обработчик события клика по кнопке "Load more"
 document.querySelector('.load-more').addEventListener('click', async () => {
   const searchQuery = document.querySelector('#search-form input[name="searchQuery"]').value.trim();
 
-  if (searchQuery !== '') {
-    await fetchImages(searchQuery);
-    scrollToNextGalleryItem();
+  if (searchQuery === '') {
+    Notiflix.Notify.failure('Please enter a search query.');
+    return; // Прекратить выполнение функции, если поле ввода пустое
   }
+
+  await fetchImages(searchQuery);
+  window.scrollBy({
+    top: document.querySelector('.gallery').firstElementChild.getBoundingClientRect().height * 2,
+    behavior: 'smooth',
+  });
 });
 
-function scrollToNextGalleryItem() {
-  const gallery = document.querySelector('.gallery');
-  const firstItem = gallery.firstElementChild;
-  if (firstItem) {
-    const cardHeight = firstItem.getBoundingClientRect().height;
-    window.scrollBy({
-      top: cardHeight * 2,
-      behavior: 'smooth',
-    });
-  }
-}
