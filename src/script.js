@@ -1,22 +1,19 @@
-import Notiflix from 'notiflix'; // Подключение библиотеки Notiflix
-import SimpleLightbox from 'simplelightbox'; // Подключение библиотеки SimpleLightbox
-import axios from 'axios'; // Подключение библиотеки axios
+import Notiflix from 'notiflix';
+import SimpleLightbox from 'simplelightbox';
+import axios from 'axios';
 
-// Инициализация SimpleLightbox
 const lightbox = new SimpleLightbox('.gallery a');
 
-// Значения параметров запроса
 let page = 1;
 const perPage = 40;
 const API_KEY = '37177651-5ec5a04b96ead6e1e080dffcf';
 const BASE_URL = 'https://pixabay.com/api/';
 
-// Функция для выполнения HTTP-запроса
 async function fetchImages(query) {
   try {
-    const response = await axios.get('BASE_URL', {
+    const response = await axios.get(BASE_URL, {
       params: {
-        key: 'API_KEY',
+        key: API_KEY,
         q: query,
         image_type: 'photo',
         orientation: 'horizontal',
@@ -35,8 +32,8 @@ async function fetchImages(query) {
       const gallery = document.querySelector('.gallery');
 
       if (page === 1) {
-        gallery.innerHTML = ''; // Очистка галереи при новом поиске
-        lightbox.refresh(); // Обновление галереи SimpleLightbox
+        gallery.innerHTML = '';
+        lightbox.refresh();
       }
 
       images.forEach((image) => {
@@ -54,21 +51,10 @@ async function fetchImages(query) {
         const info = document.createElement('div');
         info.className = 'info';
 
-        const likes = document.createElement('p');
-        likes.className = 'info-item';
-        likes.innerHTML = `<b>Likes:</b> ${image.likes}`;
-
-        const views = document.createElement('p');
-        views.className = 'info-item';
-        views.innerHTML = `<b>Views:</b> ${image.views}`;
-
-        const comments = document.createElement('p');
-        comments.className = 'info-item';
-        comments.innerHTML = `<b>Comments:</b> ${image.comments}`;
-
-        const downloads = document.createElement('p');
-        downloads.className = 'info-item';
-        downloads.innerHTML = `<b>Downloads:</b> ${image.downloads}`;
+        const likes = createInfoItem('Likes', image.likes);
+        const views = createInfoItem('Views', image.views);
+        const comments = createInfoItem('Comments', image.comments);
+        const downloads = createInfoItem('Downloads', image.downloads);
 
         info.appendChild(likes);
         info.appendChild(views);
@@ -82,10 +68,9 @@ async function fetchImages(query) {
         gallery.appendChild(card);
       });
 
-      lightbox.refresh(); // Обновление галереи SimpleLightbox
+      lightbox.refresh();
 
       if (data.totalHits <= page * perPage) {
-        // Достигнут конец коллекции
         const loadMoreBtn = document.querySelector('.load-more');
         loadMoreBtn.style.display = 'none';
         Notiflix.Notify.info("We're sorry, but you've reached the end of search results.");
@@ -102,30 +87,41 @@ async function fetchImages(query) {
   }
 }
 
-// Обработчик события отправки формы
+function createInfoItem(label, value) {
+  const item = document.createElement('p');
+  item.className = 'info-item';
+  item.innerHTML = `<b>${label}:</b> ${value}`;
+  return item;
+}
+
 document.querySelector('#search-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   const searchQuery = event.target.elements.searchQuery.value.trim();
 
   if (searchQuery !== '') {
-    page = 1; // Сброс значения страницы при новом поиске
+    page = 1;
     await fetchImages(searchQuery);
-    window.scrollBy({
-      top: document.querySelector('.gallery').firstElementChild.getBoundingClientRect().height * 2,
-      behavior: 'smooth',
-    });
+    scrollToNextGalleryItem();
   }
 });
 
-// Обработчик события клика по кнопке "Load more"
 document.querySelector('.load-more').addEventListener('click', async () => {
   const searchQuery = document.querySelector('#search-form input[name="searchQuery"]').value.trim();
 
   if (searchQuery !== '') {
     await fetchImages(searchQuery);
+    scrollToNextGalleryItem();
+  }
+});
+
+function scrollToNextGalleryItem() {
+  const gallery = document.querySelector('.gallery');
+  const firstItem = gallery.firstElementChild;
+  if (firstItem) {
+    const cardHeight = firstItem.getBoundingClientRect().height;
     window.scrollBy({
-      top: document.querySelector('.gallery').firstElementChild.getBoundingClientRect().height * 2,
+      top: cardHeight * 2,
       behavior: 'smooth',
     });
   }
-});
+}
